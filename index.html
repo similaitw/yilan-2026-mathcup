@@ -1,0 +1,453 @@
+import React, { useState, useMemo } from 'react';
+import { Trophy, Search, Filter, School, Users, Medal, Award, BarChart2, List } from 'lucide-react';
+
+// 從 PDF 萃取出的完整資料集
+const rawData = [
+  // A組
+  { id: '9010117', school: '國華國中', name: '陳○齊', award: '第一名', group: 'A組' },
+  { id: '9150217', school: '國華國中', name: '康○晴', award: '第二名', group: 'A組' },
+  { id: '9110615', school: '國華國中', name: '洪○成', award: '第二名', group: 'A組' },
+  { id: '9130421', school: '中華國中', name: '趙○薰', award: '第二名', group: 'A組' },
+  { id: '9010126', school: '中道中學', name: '沈○則', award: '第二名', group: 'A組' },
+  { id: '9110614', school: '凱旋國中', name: '游○丞', award: '第三名', group: 'A組' },
+  { id: '9150215', school: '國華國中', name: '游○捷', award: '第三名', group: 'A組' },
+  { id: '9130414', school: '凱旋國中', name: '陳○川', award: '第三名', group: 'A組' },
+  { id: '9140321', school: '中華國中', name: '林○峻', award: '第三名', group: 'A組' },
+  { id: '9120512', school: '復興國中', name: '朱○樺', award: '第三名', group: 'A組' },
+  { id: '9010111', school: '國華國中', name: '葉○霖', award: '入選', group: 'A組' },
+  { id: '9010113', school: '國華國中', name: '林○男', award: '入選', group: 'A組' },
+  { id: '9110606', school: '復興國中', name: '許○晴', award: '入選', group: 'A組' },
+  { id: '9110607', school: '國華國中', name: '李○宏', award: '入選', group: 'A組' },
+  { id: '9110610', school: '復興國中', name: '李○樂', award: '入選', group: 'A組' },
+  { id: '9110619', school: '中華國中', name: '林○宏', award: '入選', group: 'A組' },
+  { id: '9110622', school: '羅東國中', name: '洪○芯', award: '入選', group: 'A組' },
+  { id: '9110623', school: '復興國中', name: '江○叡', award: '入選', group: 'A組' },
+  { id: '9120506', school: '復興國中', name: '徐○恩', award: '入選', group: 'A組' },
+  { id: '9120507', school: '國華國中', name: '崔○晨', award: '入選', group: 'A組' },
+  { id: '9120508', school: '復興國中', name: '黃○敦', award: '入選', group: 'A組' },
+  { id: '9120513', school: '國華國中', name: '林○彤', award: '入選', group: 'A組' },
+  { id: '9120520', school: '羅東國中', name: '黃○凱', award: '入選', group: 'A組' },
+  { id: '9120522', school: '羅東國中', name: '林○瑄', award: '入選', group: 'A組' },
+  { id: '9120525', school: '復興國中', name: '唐○或', award: '入選', group: 'A組' },
+  { id: '9130409', school: '國華國中', name: '盧○叡', award: '入選', group: 'A組' },
+  { id: '9140301', school: '國華國中', name: '蘇○諒', award: '入選', group: 'A組' },
+  { id: '9140304', school: '復興國中', name: '林○宇', award: '入選', group: 'A組' },
+  { id: '9140306', school: '復興國中', name: '陳○希', award: '入選', group: 'A組' },
+  { id: '9140314', school: '凱旋國中', name: '陳○聰', award: '入選', group: 'A組' },
+  { id: '9140320', school: '羅東國中', name: '王○霖', award: '入選', group: 'A組' },
+  { id: '9140324', school: '羅東國中', name: '林○睿', award: '入選', group: 'A組' },
+  { id: '9140326', school: '礁溪國中', name: '石○宏', award: '入選', group: 'A組' },
+  { id: '9150222', school: '羅東國中', name: '徐○為', award: '入選', group: 'A組' },
+  
+  // B組
+  { id: '8020805', school: '國華國中', name: '王○毅', award: '第一名', group: 'B組' },
+  { id: '7181011', school: '羅東國中', name: '廖○晴', award: '第二名', group: 'B組' },
+  { id: '7161215', school: '羅東國中', name: '許○恩', award: '第二名', group: 'B組' },
+  { id: '7171107', school: '羅東國中', name: '林○均', award: '第二名', group: 'B組' },
+  { id: '8010907', school: '羅東國中', name: '楊○樂', award: '第二名', group: 'B組' },
+  { id: '7161211', school: '羅東國中', name: '游○盛', award: '第三名', group: 'B組' },
+  { id: '7171105', school: '國華國中', name: '張○浤', award: '第三名', group: 'B組' },
+  { id: '7171121', school: '中華國中', name: '楊○捷', award: '第三名', group: 'B組' },
+  { id: '7171102', school: '復興國中', name: '王○瑜', award: '第三名', group: 'B組' },
+  { id: '7171115', school: '羅東國中', name: '陳○淵', award: '第三名', group: 'B組' },
+  { id: '7161204', school: '東光國中', name: '江○瑩', award: '入選', group: 'B組' },
+  { id: '7161205', school: '國華國中', name: '黃○駐', award: '入選', group: 'B組' },
+  { id: '7161212', school: '頭城國中', name: '薛○謙', award: '入選', group: 'B組' },
+  { id: '7161213', school: '國華國中', name: '蘇○瑄', award: '入選', group: 'B組' },
+  { id: '7171111', school: '羅東國中', name: '李○憲', award: '入選', group: 'B組' },
+  { id: '7171126', school: '凱旋國中', name: '王○曦', award: '入選', group: 'B組' },
+  { id: '7181002', school: '復興國中', name: '林○霆', award: '入選', group: 'B組' },
+  { id: '7181006', school: '復興國中', name: '余○媜', award: '入選', group: 'B組' },
+  { id: '7181007', school: '羅東國中', name: '陳○綾', award: '入選', group: 'B組' },
+  { id: '7181019', school: '羅東國中', name: '許○元', award: '入選', group: 'B組' },
+  { id: '7181021', school: '中華國中', name: '陳○睿', award: '入選', group: 'B組' },
+  { id: '8010906', school: '復興國中', name: '游○廷', award: '入選', group: 'B組' },
+  { id: '8010909', school: '國華國中', name: '駱○浩', award: '入選', group: 'B組' },
+  { id: '8010913', school: '國華國中', name: '黃○晴', award: '入選', group: 'B組' },
+  { id: '8010919', school: '羅東國中', name: '陳○熏', award: '入選', group: 'B組' },
+  { id: '8010920', school: '文化國中', name: '陳○恩', award: '入選', group: 'B組' },
+  { id: '8010926', school: '宜蘭國中', name: '張○翔', award: '入選', group: 'B組' },
+  { id: '8010927', school: '東光國中', name: '周○耘', award: '入選', group: 'B組' },
+  { id: '8020806', school: '復興國中', name: '林○庠', award: '入選', group: 'B組' },
+  { id: '8020807', school: '羅東國中', name: '黃○元', award: '入選', group: 'B組' },
+  { id: '8140704', school: '東光國中', name: '陳○彤', award: '入選', group: 'B組' },
+  { id: '8140707', school: '羅東國中', name: '張○佑', award: '入選', group: 'B組' },
+  { id: '8140708', school: '東光國中', name: '賴○甫', award: '入選', group: 'B組' },
+  { id: '8140717', school: '國華國中', name: '吳○芊', award: '入選', group: 'B組' },
+  { id: '8140719', school: '羅東國中', name: '游○寰', award: '入選', group: 'B組' },
+  { id: '8140724', school: '中道中學', name: '楊○印', award: '入選', group: 'B組' },
+  { id: '8140725', school: '復興國中', name: '蕭○棠', award: '入選', group: 'B組' },
+
+  // C組
+  { id: '8071704', school: '礁溪國中', name: '翁○誠', award: '第一名', group: 'C組' },
+  { id: '8071724', school: '中道中學', name: '許○晧', award: '第二名', group: 'C組' },
+  { id: '8101406', school: '興中國中', name: '李○軒', award: '第二名', group: 'C組' },
+  { id: '8081621', school: '興中國中', name: '階○晨', award: '第二名', group: 'C組' },
+  { id: '8111323', school: '中道中學', name: '何○倫', award: '第二名', group: 'C組' },
+  { id: '8111303', school: '冬山國中', name: '陳○妍', award: '第三名', group: 'C組' },
+  { id: '8081617', school: '員山國中', name: '黃○鈞', award: '第三名', group: 'C組' },
+  { id: '8111325', school: '興中國中', name: '楊○祐', award: '第三名', group: 'C組' },
+  { id: '8081615', school: '三星國中', name: '廖○岑', award: '第三名', group: 'C組' },
+  { id: '8081618', school: '五結國中', name: '藍○昱', award: '第三名', group: 'C組' },
+  { id: '8071708', school: '礁溪國中', name: '劉○岑', award: '入選', group: 'C組' },
+  { id: '8071711', school: '冬山國中', name: '高○煊', award: '入選', group: 'C組' },
+  { id: '8071713', school: '員山國中', name: '李○廷', award: '入選', group: 'C組' },
+  { id: '8081602', school: '興中國中', name: '陳○希', award: '入選', group: 'C組' },
+  { id: '8081603', school: '冬山國中', name: '魏○哲', award: '入選', group: 'C組' },
+  { id: '8081610', school: '蘇澳國中', name: '羅○梓', award: '入選', group: 'C組' },
+  { id: '8081612', school: '壯圍國中', name: '吳○諺', award: '入選', group: 'C組' },
+  { id: '8081613', school: '員山國中', name: '李○寬', award: '入選', group: 'C組' },
+  { id: '8081614', school: '蘇澳國中', name: '林○靚', award: '入選', group: 'C組' },
+  { id: '8081625', school: '興中國中', name: '潘○元', award: '入選', group: 'C組' },
+  { id: '8091503', school: '冬山國中', name: '李○潔', award: '入選', group: 'C組' },
+  { id: '8091508', school: '礁溪國中', name: '林○海', award: '入選', group: 'C組' },
+  { id: '8091518', school: '五結國中', name: '胡○睿', award: '入選', group: 'C組' },
+  { id: '8091519', school: '吳沙國中', name: '張○辰', award: '入選', group: 'C組' },
+  { id: '8091523', school: '礁溪國中', name: '林○妤', award: '入選', group: 'C組' },
+  { id: '8101402', school: '興中國中', name: '林○晟', award: '入選', group: 'C組' },
+  { id: '8101403', school: '冬山國中', name: '吳○臻', award: '入選', group: 'C組' },
+  { id: '8101417', school: '員山國中', name: '張○豪', award: '入選', group: 'C組' },
+  { id: '8101421', school: '順安國中', name: '陳○品', award: '入選', group: 'C組' },
+  { id: '8101425', school: '興中國中', name: '江○瑜', award: '入選', group: 'C組' },
+  { id: '8111301', school: '利澤國中', name: '林○任', award: '入選', group: 'C組' },
+  { id: '8111305', school: '利澤國中', name: '林○妘', award: '入選', group: 'C組' },
+  { id: '8111307', school: '冬山國中', name: '賴○妍', award: '入選', group: 'C組' },
+  { id: '8111313', school: '員山國中', name: '石○豪', award: '入選', group: 'C組' },
+];
+
+// 提取所有獨立學校名單以供下拉選單使用
+const schools = [...new Set(rawData.map(item => item.school))].sort();
+
+export default function LanyangMathDashboard() {
+  const [filterGroup, setFilterGroup] = useState('全部組別');
+  const [filterSchool, setFilterSchool] = useState('所有學校');
+  const [filterAward, setFilterAward] = useState('所有獎項');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState('list'); // 'list' 或 'charts'
+
+  // 動態篩選資料
+  const filteredData = useMemo(() => {
+    return rawData.filter(item => {
+      const matchGroup = filterGroup === '全部組別' || item.group === filterGroup;
+      const matchSchool = filterSchool === '所有學校' || item.school === filterSchool;
+      const matchAward = filterAward === '所有獎項' || item.award === filterAward;
+      const matchSearch = item.name.includes(searchQuery) || item.id.includes(searchQuery);
+      return matchGroup && matchSchool && matchAward && matchSearch;
+    });
+  }, [filterGroup, filterSchool, filterAward, searchQuery]);
+
+  // 計算學校統計數據 (根據當前篩選結果)
+  const schoolStats = useMemo(() => {
+    const stats = {};
+    filteredData.forEach(item => {
+      if (!stats[item.school]) stats[item.school] = 0;
+      stats[item.school]++;
+    });
+    // 排序並取前 10 名顯示於首頁總覽圖表
+    return Object.entries(stats)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
+  }, [filteredData]);
+
+  // 深度計算各校詳細戰力 (包含各獎項數量)
+  const schoolDetailedStats = useMemo(() => {
+    const stats = {};
+    filteredData.forEach(item => {
+      if (!stats[item.school]) {
+        stats[item.school] = { total: 0, '第一名': 0, '第二名': 0, '第三名': 0, '入選': 0, groups: new Set() };
+      }
+      stats[item.school].total++;
+      stats[item.school][item.award]++;
+      stats[item.school].groups.add(item.group);
+    });
+    return Object.entries(stats).sort((a, b) => b[1].total - a[1].total);
+  }, [filteredData]);
+
+  const maxCount = schoolStats.length > 0 ? schoolStats[0][1] : 1;
+
+  // 取得獎牌顏色樣式
+  const getAwardStyle = (award) => {
+    switch (award) {
+      case '第一名': return 'bg-amber-100 text-amber-800 border-amber-300';
+      case '第二名': return 'bg-slate-100 text-slate-800 border-slate-300';
+      case '第三名': return 'bg-orange-100 text-orange-800 border-orange-300';
+      default: return 'bg-blue-50 text-blue-700 border-blue-200';
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-800">
+      <div className="max-w-6xl mx-auto space-y-6">
+        
+        {/* 標題區 */}
+        <header className="bg-white rounded-2xl shadow-sm p-6 border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex items-center gap-4">
+            <div className="bg-blue-600 p-3 rounded-xl text-white shadow-sm shadow-blue-200">
+              <Trophy size={28} />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">2026年 第19屆蘭陽盃數學大賽</h1>
+              <p className="text-slate-500 mt-1">子活動二：數學金頭腦 獲獎成績動態篩選系統</p>
+            </div>
+          </div>
+          
+          {/* 視圖切換器 */}
+          <div className="flex bg-slate-100 p-1 rounded-lg">
+            <button 
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              <List size={16} /> 名單與總覽
+            </button>
+            <button 
+              onClick={() => setViewMode('charts')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'charts' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              <BarChart2 size={16} /> 各校戰力圖表
+            </button>
+          </div>
+        </header>
+
+        {/* 控制面板區 */}
+        <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
+          <div className="flex items-center gap-2 mb-4 text-slate-700 font-semibold">
+            <Filter size={18} />
+            <h2>條件篩選器</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-600">參賽組別</label>
+              <select 
+                className="w-full bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                value={filterGroup}
+                onChange={(e) => setFilterGroup(e.target.value)}
+              >
+                <option value="全部組別">全部組別</option>
+                <option value="A組">A組</option>
+                <option value="B組">B組</option>
+                <option value="C組">C組</option>
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-600">學校</label>
+              <select 
+                className="w-full bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                value={filterSchool}
+                onChange={(e) => setFilterSchool(e.target.value)}
+              >
+                <option value="所有學校">所有學校</option>
+                {schools.map(school => (
+                  <option key={school} value={school}>{school}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-600">獲獎名次</label>
+              <select 
+                className="w-full bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                value={filterAward}
+                onChange={(e) => setFilterAward(e.target.value)}
+              >
+                <option value="所有獎項">所有獎項</option>
+                <option value="第一名">第一名</option>
+                <option value="第二名">第二名</option>
+                <option value="第三名">第三名</option>
+                <option value="入選">入選</option>
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-600">搜尋學生或准考證</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-3 text-slate-400" size={18} />
+                <input 
+                  type="text" 
+                  placeholder="輸入姓名或號碼..." 
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-700 rounded-lg pl-10 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 視圖內容 */}
+        {viewMode === 'list' ? (
+          /* 名單與總覽視圖 (原始) */
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* 左側：統計數據與分佈 */}
+            <div className="lg:col-span-1 space-y-6">
+              <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="bg-indigo-100 text-indigo-600 p-2 rounded-lg">
+                    <Users size={20} />
+                  </div>
+                  <h3 className="font-semibold text-slate-800">篩選結果總計</h3>
+                </div>
+                <p className="text-4xl font-bold text-slate-900 mt-4">
+                  {filteredData.length} <span className="text-base font-normal text-slate-500">人次獲獎</span>
+                </p>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="bg-teal-100 text-teal-600 p-2 rounded-lg">
+                    <School size={20} />
+                  </div>
+                  <h3 className="font-semibold text-slate-800">各校獲獎分佈 (Top 10)</h3>
+                </div>
+                
+                {schoolStats.length > 0 ? (
+                  <div className="space-y-4">
+                    {schoolStats.map(([school, count]) => (
+                      <div key={school} className="relative">
+                        <div className="flex justify-between text-sm mb-1 text-slate-600">
+                          <span className="font-medium">{school}</span>
+                          <span>{count} 人</span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-2.5">
+                          <div 
+                            className="bg-blue-500 h-2.5 rounded-full transition-all duration-500 ease-in-out" 
+                            style={{ width: `${(count / maxCount) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-slate-400 text-sm text-center py-8">無符合條件的學校資料</p>
+                )}
+              </div>
+            </div>
+
+            {/* 右側：詳細名單資料表 */}
+            <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <div className="flex items-center gap-2">
+                  <Award className="text-blue-600" size={20} />
+                  <h2 className="font-semibold text-slate-800 text-lg">獲獎英雄榜</h2>
+                </div>
+              </div>
+              
+              <div className="overflow-x-auto flex-grow">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-500 text-sm border-b border-slate-200">
+                      <th className="px-6 py-4 font-medium whitespace-nowrap">組別</th>
+                      <th className="px-6 py-4 font-medium whitespace-nowrap">名次</th>
+                      <th className="px-6 py-4 font-medium whitespace-nowrap">學校</th>
+                      <th className="px-6 py-4 font-medium whitespace-nowrap">學生姓名</th>
+                      <th className="px-6 py-4 font-medium whitespace-nowrap">准考證號碼</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-slate-700">
+                    {filteredData.length > 0 ? (
+                      filteredData.map((row, index) => (
+                        <tr key={`${row.id}-${index}`} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-6 py-4">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                              {row.group}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-sm font-semibold border ${getAwardStyle(row.award)}`}>
+                              {row.award === '第一名' && <Medal size={14} className="mr-1" />}
+                              {row.award}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 font-medium text-slate-900">{row.school}</td>
+                          <td className="px-6 py-4">{row.name}</td>
+                          <td className="px-6 py-4 font-mono text-slate-500 text-sm">{row.id}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="5" className="px-6 py-12 text-center text-slate-400">
+                          <div className="flex flex-col items-center justify-center">
+                            <Search size={32} className="mb-3 text-slate-300" />
+                            <p>找不到符合條件的學生名單，請調整篩選條件。</p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* 各校戰力分析圖表視圖 (新) */
+          <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
+            <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4">
+              <BarChart2 className="text-blue-600" size={24} />
+              <h2 className="font-semibold text-slate-800 text-xl">各校獎項分佈圖與戰力分析</h2>
+            </div>
+            
+            {schoolDetailedStats.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {schoolDetailedStats.map(([school, stats]) => {
+                  // 計算百分比用於繪製堆疊條形圖
+                  const p1 = (stats['第一名'] / stats.total) * 100;
+                  const p2 = (stats['第二名'] / stats.total) * 100;
+                  const p3 = (stats['第三名'] / stats.total) * 100;
+                  const p4 = (stats['入選'] / stats.total) * 100;
+
+                  return (
+                    <div key={school} className="flex flex-col p-5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:shadow-md transition-all">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="text-lg font-bold text-slate-900">{school}</h3>
+                          <p className="text-xs text-slate-500 mt-1">參賽組別: {Array.from(stats.groups).sort().join(', ')}</p>
+                        </div>
+                        <div className="bg-blue-100 text-blue-800 font-bold px-3 py-1 rounded-lg text-lg">
+                          {stats.total} <span className="text-xs font-normal text-blue-600">獎</span>
+                        </div>
+                      </div>
+
+                      {/* 堆疊百分比長條圖 */}
+                      <div className="w-full h-3 rounded-full overflow-hidden flex mb-4 bg-slate-200">
+                        {p1 > 0 && <div style={{width: `${p1}%`}} className="bg-amber-400 h-full" title={`第一名: ${stats['第一名']}`}></div>}
+                        {p2 > 0 && <div style={{width: `${p2}%`}} className="bg-slate-400 h-full" title={`第二名: ${stats['第二名']}`}></div>}
+                        {p3 > 0 && <div style={{width: `${p3}%`}} className="bg-orange-400 h-full" title={`第三名: ${stats['第三名']}`}></div>}
+                        {p4 > 0 && <div style={{width: `${p4}%`}} className="bg-blue-400 h-full" title={`入選: ${stats['入選']}`}></div>}
+                      </div>
+
+                      {/* 獎項詳細數據網格 */}
+                      <div className="grid grid-cols-4 gap-2 mt-auto">
+                        <div className="flex flex-col items-center p-2 rounded-lg bg-white border border-slate-100">
+                          <span className="text-xs text-slate-500 mb-1">第一名</span>
+                          <span className="font-bold text-amber-600">{stats['第一名']}</span>
+                        </div>
+                        <div className="flex flex-col items-center p-2 rounded-lg bg-white border border-slate-100">
+                          <span className="text-xs text-slate-500 mb-1">第二名</span>
+                          <span className="font-bold text-slate-600">{stats['第二名']}</span>
+                        </div>
+                        <div className="flex flex-col items-center p-2 rounded-lg bg-white border border-slate-100">
+                          <span className="text-xs text-slate-500 mb-1">第三名</span>
+                          <span className="font-bold text-orange-600">{stats['第三名']}</span>
+                        </div>
+                        <div className="flex flex-col items-center p-2 rounded-lg bg-white border border-slate-100">
+                          <span className="text-xs text-slate-500 mb-1">入選</span>
+                          <span className="font-bold text-blue-600">{stats['入選']}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-20 text-center text-slate-400 flex flex-col items-center">
+                <Search size={48} className="mb-4 text-slate-200" />
+                <p className="text-lg">無符合條件的學校資料，請嘗試放寬篩選條件。</p>
+              </div>
+            )}
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
